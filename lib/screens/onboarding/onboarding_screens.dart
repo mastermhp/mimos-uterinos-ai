@@ -17,10 +17,11 @@ class OnboardingScreens extends StatefulWidget {
 class _OnboardingScreensState extends State<OnboardingScreens> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 8; // Total number of actual onboarding pages
+  final int _totalPages = 9; // Increased total pages to include age screen
 
   // User data
   String _name = "";
+  int _age = 25; // Default age
   DateTime _birthdate = DateTime(1995, 12, 25);
   double _weight = 60.0;
   double _height = 165.0;
@@ -30,6 +31,9 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
   DateTime _lastPeriodDate = DateTime.now().subtract(const Duration(days: 14));
   bool _isLoading = false;
   double _loadingProgress = 0.0;
+
+  // Selected cycle days
+  List<int> _selectedCycleDays = [26, 27, 28]; // Default for regular cycle
 
   // Health data for dynamic screens
   List<String> _selectedSymptoms = [];
@@ -54,7 +58,7 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
     super.initState();
     // Add listener to detect when we reach the loading page
     _pageController.addListener(() {
-      if (_pageController.page == 7 && !_isLoading) {
+      if (_pageController.page == 8 && !_isLoading) { // Updated for new page count
         setState(() {
           _isLoading = true;
         });
@@ -106,21 +110,30 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
       'date': DateTime.now().toIso8601String(),
     }).toList();
     
+    // Calculate average cycle length from selected days
+    int avgCycleLength = 0;
+    if (_selectedCycleDays.isNotEmpty) {
+      avgCycleLength = _selectedCycleDays.reduce((a, b) => a + b) ~/ _selectedCycleDays.length;
+    } else {
+      avgCycleLength = _cycleLength;
+    }
+    
     userDataProvider.saveOnboardingData(
       name: _name,
       birthDate: _birthdate,
+      age: _age, // Use the age input directly
       weight: _weight,
       height: _height,
       periodLength: _periodLength,
-      // isRegularCycle: _isRegularCycle,
-      cycleLength: _cycleLength,
+      isRegularCycle: _isRegularCycle,
+      cycleLength: avgCycleLength,
       lastPeriodDate: _lastPeriodDate,
-      // goals: [{'name': 'Track cycle', 'completed': false}],
+      goals: [{'name': 'Track cycle', 'completed': false}],
       email: '',
       healthConditions: [],
-      // symptoms: symptoms,
-      // moods: moods,
-      // notes: [],
+      symptoms: symptoms,
+      moods: moods,
+      notes: [],
     );
   }
 
@@ -205,6 +218,7 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                 },
                 children: [
                   _buildNamePage(),
+                  _buildAgePage(), // New age input page
                   _buildBirthdayPage(),
                   _buildWeightPage(),
                   _buildHeightPage(),
@@ -218,7 +232,7 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
             ),
 
             // Next button (hide on loading page)
-            if (_currentPage < 8)
+            if (_currentPage < 9) // Updated for new page count
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Center(
@@ -273,6 +287,209 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
     );
   }
 
+  // New age input page
+  Widget _buildAgePage() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          const Text(
+            "How old are you?",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 40),
+          
+          // Age display
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Decrement button
+                GestureDetector(
+                  onTap: () {
+                    if (_age > 12) { // Minimum age
+                      setState(() {
+                        _age--;
+                        // Update birthdate to match age
+                        _birthdate = DateTime(
+                          DateTime.now().year - _age,
+                          _birthdate.month,
+                          _birthdate.day,
+                        );
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.remove,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                
+                // Age value
+                Container(
+                  width: 120,
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    "$_age",
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                
+                // Increment button
+                GestureDetector(
+                  onTap: () {
+                    if (_age < 70) { // Maximum age
+                      setState(() {
+                        _age++;
+                        // Update birthdate to match age
+                        _birthdate = DateTime(
+                          DateTime.now().year - _age,
+                          _birthdate.month,
+                          _birthdate.day,
+                        );
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Age slider
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 8,
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: Colors.grey.shade200,
+              thumbColor: AppColors.primary,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 12,
+              ),
+            ),
+            child: Slider(
+              value: _age.toDouble(),
+              min: 12, // Minimum age
+              max: 70, // Maximum age
+              divisions: 58, // (70-12)
+              onChanged: (value) {
+                setState(() {
+                  _age = value.round();
+                  // Update birthdate to match age
+                  _birthdate = DateTime(
+                    DateTime.now().year - _age,
+                    _birthdate.month,
+                    _birthdate.day,
+                  );
+                });
+              },
+            ),
+          ),
+          
+          // Age range labels
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "12",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  "30",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  "50",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  "70",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Info text
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.blue.shade700,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Your age helps us provide more accurate cycle predictions and health insights.",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBirthdayPage() {
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -315,6 +532,13 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                           int.parse(value),
                           _birthdate.day,
                         );
+                        // Update age based on birthdate
+                        _age = DateTime.now().year - _birthdate.year;
+                        if (DateTime.now().month < _birthdate.month || 
+                            (DateTime.now().month == _birthdate.month && 
+                             DateTime.now().day < _birthdate.day)) {
+                          _age--;
+                        }
                       });
                     },
                   ),
@@ -342,6 +566,13 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                           _birthdate.month,
                           int.parse(value),
                         );
+                        // Update age based on birthdate
+                        _age = DateTime.now().year - _birthdate.year;
+                        if (DateTime.now().month < _birthdate.month || 
+                            (DateTime.now().month == _birthdate.month && 
+                             DateTime.now().day < _birthdate.day)) {
+                          _age--;
+                        }
                       });
                     },
                   ),
@@ -369,12 +600,40 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                           _birthdate.month,
                           _birthdate.day,
                         );
+                        // Update age based on birthdate
+                        _age = DateTime.now().year - _birthdate.year;
+                        if (DateTime.now().month < _birthdate.month || 
+                            (DateTime.now().month == _birthdate.month && 
+                             DateTime.now().day < _birthdate.day)) {
+                          _age--;
+                        }
                       });
                     },
                   ),
                 ],
               ),
             ],
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Display calculated age
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                "You are $_age years old",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -459,40 +718,40 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
               ),
 
               // Slider labels
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       "30",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "60",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "90",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "120",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "150",
                       style: TextStyle(
                         fontSize: 12,
@@ -587,40 +846,40 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
               ),
 
               // Slider labels
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       "120",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "140",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "160",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "180",
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "200",
                       style: TextStyle(
                         fontSize: 12,
@@ -711,6 +970,24 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
   }
 
   Widget _buildCycleLengthPage() {
+    // Define cycle length ranges based on regularity
+    List<int> cycleDays = List.generate(8, (index) => index + 24); // 24-31 days
+    
+    // Update selected days when regularity changes
+    if (_isRegularCycle && !_selectedCycleDays.any((day) => day >= 26 && day <= 28)) {
+      _selectedCycleDays = [26, 27, 28];
+    } else if (!_isRegularCycle && !_selectedCycleDays.any((day) => day >= 28 && day <= 30)) {
+      _selectedCycleDays = [28, 29, 30];
+    }
+    
+    // Calculate range text
+    String rangeText = "";
+    if (_selectedCycleDays.isNotEmpty) {
+      int minDay = _selectedCycleDays.reduce((a, b) => a < b ? a : b);
+      int maxDay = _selectedCycleDays.reduce((a, b) => a > b ? a : b);
+      rangeText = "$minDay - $maxDay days";
+    }
+    
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -736,7 +1013,11 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                 isSelected: _isRegularCycle,
                 onTap: () {
                   setState(() {
-                    _isRegularCycle = true;
+                    if (!_isRegularCycle) {
+                      _isRegularCycle = true;
+                      // Update selected days for regular cycle
+                      _selectedCycleDays = [26, 27, 28];
+                    }
                   });
                 },
               ),
@@ -746,7 +1027,11 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                 isSelected: !_isRegularCycle,
                 onTap: () {
                   setState(() {
-                    _isRegularCycle = false;
+                    if (_isRegularCycle) {
+                      _isRegularCycle = false;
+                      // Update selected days for irregular cycle
+                      _selectedCycleDays = [28, 29, 30];
+                    }
                   });
                 },
               ),
@@ -762,19 +1047,26 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
               childAspectRatio: 1.5,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              children: List.generate(8, (index) {
-                final days = index + 24; // 24-31 days
-
-                // For regular cycle, show 26-28 selected
-                // For irregular cycle, show 28-30 selected
-                final bool isSelected = _isRegularCycle
-                    ? (days >= 26 && days <= 28)
-                    : (days >= 28 && days <= 30);
-
+              children: cycleDays.map((day) {
+                final isSelected = _selectedCycleDays.contains(day);
+                
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      _cycleLength = days;
+                      // Toggle selection
+                      if (isSelected) {
+                        // Don't allow deselecting if it's the last selected day
+                        if (_selectedCycleDays.length > 1) {
+                          _selectedCycleDays.remove(day);
+                        }
+                      } else {
+                        _selectedCycleDays.add(day);
+                      }
+                      
+                      // Update cycle length based on average of selected days
+                      if (_selectedCycleDays.isNotEmpty) {
+                        _cycleLength = _selectedCycleDays.reduce((a, b) => a + b) ~/ _selectedCycleDays.length;
+                      }
                     });
                   },
                   child: Container(
@@ -788,7 +1080,7 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                     ),
                     child: Center(
                       child: Text(
-                        "$days",
+                        "$day",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -798,7 +1090,7 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                     ),
                   ),
                 );
-              }),
+              }).toList(),
             ),
           ),
 
@@ -815,18 +1107,10 @@ class _OnboardingScreensState extends State<OnboardingScreens> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _isRegularCycle ? "26 - 28" : "28 - 30",
+                    rangeText,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    "days",
-                    style: TextStyle(
-                      fontSize: 14,
                       color: AppColors.primary,
                     ),
                   ),

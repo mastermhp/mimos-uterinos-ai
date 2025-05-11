@@ -39,6 +39,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'Improve my health',
   ];
   bool _isRegularCycle = true;
+  
+  get age => null;
 
   @override
   void dispose() {
@@ -100,21 +102,33 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       
       await userDataProvider.saveOnboardingData(
         name: _nameController.text,
-        // age: int.parse(_ageController.text),
-        weight: double.parse(_weightController.text),
-        height: double.parse(_heightController.text),
+        age: age,
+        birthDate: _birthDate,
+        lastPeriodDate: _lastPeriodDate,
         cycleLength: int.parse(_cycleLengthController.text),
         periodLength: int.parse(_periodLengthController.text),
-        lastPeriodDate: _lastPeriodDate,
-        birthDate: _birthDate,
-        // goals: formattedGoals,
-        // isRegularCycle: _isRegularCycle,
-        email: '',
+        height: double.parse(_heightController.text),
+        weight: double.parse(_weightController.text),
         healthConditions: [],
-        // symptoms: [],
-        // moods: [],
-        // notes: [],
+        email: '',
+        goals: formattedGoals,
+        isRegularCycle: _isRegularCycle,
+        symptoms: [],
+        moods: [],
+        notes: [],
       );
+
+      // name: _nameController.text,
+      //     age: age,
+      //     weight: double.tryParse(_weightController.text) ?? 0.0,
+      //     height: double.tryParse(_heightController.text) ?? 0.0,
+      //     cycleLength: int.tryParse(_cycleLengthController.text) ?? 28,
+      //     periodLength: int.tryParse(_periodLengthController.text) ?? 5,
+      //     lastPeriodDate: _lastPeriodDate ?? DateTime.now(),
+      //     birthDate: _birthDate ?? DateTime.now(),
+      //     email: _emailController.text,
+      //     healthConditions: _healthConditions,
+          
 
       // Show AI tips page
       setState(() {
@@ -243,13 +257,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     _isLoading
                       ? const CircularProgressIndicator()
                       : AnimatedGradientButton(
-                        text: "next",
-                          onPressed: _nextPage,
+                          onPressed: _isLoading ? null : _nextPage,
+                          text: _currentPage < 3 ? 'Next' : 'Finish',
+                          isLoading: _isLoading,
                           width: 120,
                           height: 50,
-                         
-                         
-                        ),
+                        ), 
                   ],
                 ),
               ),
@@ -780,13 +793,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: SizedBox(
               width: double.infinity,
-              child: AnimatedGradientButton(
-                text: 'Continue to Home',
-                onPressed: _navigateToHome,
-                height: 50,
-                
-               
-              ),
+              child:
+              
+              AnimatedGradientButton(
+                          onPressed: _isLoading ? null : _navigateToHome,
+                          text: 'Continue to Home',
+                          isLoading: _isLoading,
+                          width: 120,
+                          height: 50,
+                        ),
             ),
           ),
         ],

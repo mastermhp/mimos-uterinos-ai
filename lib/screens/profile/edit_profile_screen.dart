@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import 'package:menstrual_health_ai/constants/app_colors.dart';
 import 'package:menstrual_health_ai/constants/text_styles.dart';
+import 'package:menstrual_health_ai/models/user_data.dart';
+import 'package:menstrual_health_ai/providers/user_data_provider.dart';
 import 'package:menstrual_health_ai/widgets/animated_gradient_button.dart';
+import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,10 +17,43 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: "Sarah Johnson");
-  final _emailController = TextEditingController(text: "sarah.j@example.com");
-  final _phoneController = TextEditingController(text: "+1 (555) 123-4567");
-  final _birthdayController = TextEditingController(text: "1990-05-15");
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _birthdayController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _cycleLengthController = TextEditingController();
+  final _periodLengthController = TextEditingController();
+  
+  DateTime? _birthDate;
+  DateTime? _lastPeriodDate;
+  bool _isLoading = false;
+  List<String> _healthConditions = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+  
+  Future<void> _loadUserData() async {
+    final userData = Provider.of<UserDataProvider>(context, listen: false).userData;
+    if (userData != null) {
+      setState(() {
+        _nameController.text = userData.name;
+        _emailController.text = userData.email;
+        _birthDate = userData.birthDate;
+        _birthdayController.text = DateFormat('yyyy-MM-dd').format(userData.birthDate);
+        _heightController.text = userData.height.toString();
+        _weightController.text = userData.weight.toString();
+        _cycleLengthController.text = userData.cycleLength.toString();
+        _periodLengthController.text = userData.periodLength.toString();
+        _lastPeriodDate = userData.lastPeriodDate;
+        _healthConditions = userData.healthConditions;
+      });
+    }
+  }
   
   @override
   void dispose() {
@@ -24,7 +61,76 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _birthdayController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _cycleLengthController.dispose();
+    _periodLengthController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveUserData() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      try {
+        final userDataProvider = Provider.of<UserDataProvider>(context, listen: false);
+        
+        // Calculate age from birthdate
+        final now = DateTime.now();
+        final birthDate = _birthDate ?? DateTime.now();
+        int age = now.year - birthDate.year;
+        if (now.month < birthDate.month || 
+            (now.month == birthDate.month && now.day < birthDate.day)) {
+          age--;
+        }
+        
+        await userDataProvider.saveOnboardingData(
+          name: _nameController.text,
+          age: age,
+          weight: double.tryParse(_weightController.text) ?? 0.0,
+          height: double.tryParse(_heightController.text) ?? 0.0,
+          cycleLength: int.tryParse(_cycleLengthController.text) ?? 28,
+          periodLength: int.tryParse(_periodLengthController.text) ?? 5,
+          lastPeriodDate: _lastPeriodDate ?? DateTime.now(),
+          birthDate: _birthDate ?? DateTime.now(),
+          email: _emailController.text,
+          healthConditions: _healthConditions,
+          symptoms: [],
+          moods: [],
+          notes: [],
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Profile updated successfully!"),
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Error updating profile: $e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  void _handleSavePressed() {
+    _saveUserData();
   }
 
   @override
@@ -118,7 +224,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "Change Profile Picture",
             style: TextStyle(
               fontSize: 16,
@@ -183,13 +289,112 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           onTap: () async {
             final DateTime? picked = await showDatePicker(
               context: context,
-              initialDate: DateTime(1990, 5, 15),
+              initialDate: _birthDate ?? DateTime(1990, 5, 15),
               firstDate: DateTime(1950),
               lastDate: DateTime.now(),
             );
             if (picked != null) {
               setState(() {
+                _birthDate = picked;
                 _birthdayController.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+              });
+            }
+          },
+        ),
+        const SizedBox(height: 24),
+        Text(
+          "Health Information",
+          style: TextStyles.heading3,
+        ),
+        const SizedBox(height: 24),
+        _buildTextField(
+          label: "Height (cm)",
+          controller: _heightController,
+          icon: Icons.height,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter your height";
+            }
+            if (double.tryParse(value) == null) {
+              return "Please enter a valid number";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          label: "Weight (kg)",
+          controller: _weightController,
+          icon: Icons.monitor_weight_outlined,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter your weight";
+            }
+            if (double.tryParse(value) == null) {
+              return "Please enter a valid number";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 24),
+        Text(
+          "Cycle Information",
+          style: TextStyles.heading3,
+        ),
+        const SizedBox(height: 24),
+        _buildTextField(
+          label: "Average Cycle Length (days)",
+          controller: _cycleLengthController,
+          icon: Icons.calendar_month_outlined,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter your cycle length";
+            }
+            if (int.tryParse(value) == null) {
+              return "Please enter a valid number";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          label: "Average Period Length (days)",
+          controller: _periodLengthController,
+          icon: Icons.water_drop_outlined,
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return "Please enter your period length";
+            }
+            if (int.tryParse(value) == null) {
+              return "Please enter a valid number";
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          label: "Last Period Date",
+          controller: TextEditingController(
+            text: _lastPeriodDate != null 
+                ? DateFormat('yyyy-MM-dd').format(_lastPeriodDate!) 
+                : 'Not set'
+          ),
+          icon: Icons.event_outlined,
+          readOnly: true,
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: _lastPeriodDate ?? DateTime.now(),
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now(),
+            );
+            if (picked != null) {
+              setState(() {
+                _lastPeriodDate = picked;
               });
             }
           },
@@ -248,18 +453,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildSaveButton() {
     return AnimatedGradientButton(
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          // Save profile
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Profile updated successfully!"),
-            ),
-          );
-          Navigator.pop(context);
-        }
-      },
-      text: "Save Changes",
+      onPressed: _isLoading ? null : _handleSavePressed,
+      text: _isLoading ? "Saving..." : "Save Changes",
+      isLoading: _isLoading,
       icon: Icons.check,
     ).animate().fadeIn(duration: 800.ms, delay: 400.ms);
   }

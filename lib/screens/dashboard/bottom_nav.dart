@@ -17,7 +17,7 @@ class _BottomNavState extends State<BottomNav> {
   int _selectedIndex = 0;
 
   static final List<Widget> _screens = [
-    const HomeScreen(), // Removed the userName parameter
+    const HomeScreen(),
     const CycleCalendarScreen(),
     const ReportsScreen(),
     const AiCoachScreen(),
@@ -35,70 +35,95 @@ class _BottomNavState extends State<BottomNav> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+        height: 100, // Increased height for more padding
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+        ),
+        child: Stack(
+          children: [
+            // Pink curved background
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.primary, // Pink color from the image
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(50),
+                    topRight: Radius.circular(50),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                // Add padding at the top and bottom
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+                    _buildNavItem(1, Icons.calendar_today_rounded, Icons.calendar_today_outlined, 'Calendar'),
+                    _buildNavItem(2, Icons.bar_chart, Icons.bar_chart_rounded, 'Reports'),
+                    _buildNavItem(3, Icons.chat_bubble_rounded, Icons.chat_bubble_outline_rounded, 'AI Coach'),
+                    _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profile'),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: BottomNavigationBar(
-                backgroundColor: Colors.white,
-                currentIndex: _selectedIndex,
-                onTap: _onItemTapped,
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: AppColors.primary,
-                unselectedItemColor: Colors.grey.shade400,
-                showSelectedLabels: true,
-                showUnselectedLabels: true,
-                selectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+    final isSelected = _selectedIndex == index;
+    
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: isSelected ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.8),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 1),
                 ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-                elevation: 0,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home_rounded),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_today_outlined),
-                    activeIcon: Icon(Icons.calendar_today_rounded),
-                    label: 'Calendar',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.bar_chart_rounded),
-                    activeIcon: Icon(Icons.bar_chart),
-                    label: 'Reports',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.chat_bubble_outline_rounded),
-                    activeIcon: Icon(Icons.chat_bubble_rounded),
-                    label: 'AI Coach',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline_rounded),
-                    activeIcon: Icon(Icons.person_rounded),
-                    label: 'Profile',
-                  ),
-                ],
+              ] : null,
+            ),
+            child: Center(
+              child: Icon(
+                isSelected ? activeIcon : inactiveIcon,
+                color: isSelected ? AppColors.primary : Colors.grey.shade600,
+                size: 26,
               ),
             ),
           ),
-        ),
+          // Uncomment this if you want to show labels below icons
+          // const SizedBox(height: 4),
+          // Text(
+          //   label,
+          //   style: TextStyle(
+          //     color: isSelected ? AppColors.primary : Colors.grey.shade400,
+          //     fontSize: 10,
+          //     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          //   ),
+          // ),
+        ],
       ),
     );
   }

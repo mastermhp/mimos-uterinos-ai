@@ -111,7 +111,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -180,7 +180,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                       
                       if (isPeriodDay) {
                         return Positioned(
-                          bottom: 1,
+                          bottom: 8,
                           child: Container(
                             width: 35,
                             height: 35,
@@ -194,7 +194,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                       
                       if (isOvulationDay) {
                         return Positioned(
-                          bottom: 1,
+                          bottom: 8,
                           child: Container(
                             width: 35,
                             height: 35,
@@ -208,7 +208,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                       
                       if (isFertileDay) {
                         return Positioned(
-                          bottom: 1,
+                          bottom: 8,
                           child: Container(
                             width: 35,
                             height: 35,
@@ -488,7 +488,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                 ),
                 child: const Icon(
                   Icons.auto_awesome,
-                  color: Colors.white,
+                  color: AppColors.primary,
                   size: 20,
                 ),
               ),
@@ -498,7 +498,7 @@ class _CycleCalendarScreenState extends State<CycleCalendarScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColors.primary,
                 ),
               ),
             ],

@@ -4,9 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:menstrual_health_ai/models/user_data.dart';
 
 class AIService {
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
   // Note: In a real app, you would store this securely and not hardcode it
-  static const String _apiKey = 'AIzaSyBgCS5f29I1rBlau4gm7hmVVoAW1ihvgpM';
+  // static const String _apiKey = 'AIzaSyBgCS5f29I1rBlau4gm7hmVVoAW1ihvgpM';
+  static const String _apiKey = 'AIzaSyDlTg1Tq9w1kMCUTDqefgf4YbJOa-7yVaQ';
 
   // Generate daily insights based on user data
   Future<List<String>> generateDailyInsights(UserData userData) async {

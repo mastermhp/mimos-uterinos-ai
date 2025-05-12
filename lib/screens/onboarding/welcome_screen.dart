@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:menstrual_health_ai/constants/app_colors.dart';
 import 'package:menstrual_health_ai/constants/text_styles.dart';
-import 'package:menstrual_health_ai/screens/onboarding/login_screen.dart';
+import 'package:menstrual_health_ai/screens/auth/login_screen.dart';
 import 'package:menstrual_health_ai/widgets/animated_gradient_button.dart';
 import 'package:menstrual_health_ai/widgets/wave_clipper.dart';
 

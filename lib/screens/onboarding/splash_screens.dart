@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:menstrual_health_ai/constants/app_colors.dart';
 import 'package:menstrual_health_ai/constants/text_styles.dart';
-import 'package:menstrual_health_ai/screens/onboarding/login_screen.dart';
+import 'package:menstrual_health_ai/screens/auth/login_screen.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class SplashScreens extends StatefulWidget {
